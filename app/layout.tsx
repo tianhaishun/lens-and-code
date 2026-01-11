@@ -1,5 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'Cinematic Blog - 个人博客',
@@ -11,9 +12,27 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const GA_ID = process.env.NEXT_PUBLIC_GA_ID
+
   return (
     <html lang="zh-CN">
       <body className="cinema-effect vignette">
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
         <div className="film-grain">
           {children}
         </div>

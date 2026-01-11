@@ -6,36 +6,61 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { articles as sampleArticles } from '@/data/sampleData';
 import { supabase } from '@/lib/supabase';
+import { checkIsAdmin, getAllArticles, deleteArticle as deleteArticleFromDb } from '@/lib/database';
 
 export default function AdminPage() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('articles');
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [userId, setUserId] = useState('');
 
-  // 从 localStorage 加载已发布的文章
   const [articles, setArticles] = useState<typeof sampleArticles>([]);
 
   useEffect(() => {
-    // 加载示例文章 + 已发布的文章
-    const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
-    setArticles([...sampleArticles, ...published]);
-
-    // 检查登录状态
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setIsLoggedIn(true);
-      }
-    };
     checkSession();
   }, []);
 
-  // 使用 Supabase 进行登录或注册
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      setUserId(session.user.id);
+      setIsLoggedIn(true);
+
+      // 检查是否是管理员
+      const adminStatus = await checkIsAdmin(session.user.id);
+      setIsAdmin(adminStatus);
+
+      if (!adminStatus) {
+        setError('您还没有管理员权限，请联系站长授权');
+      } else {
+        // 加载文章
+        await loadArticles();
+      }
+    }
+  };
+
+  const loadArticles = async () => {
+    try {
+      // 从 Supabase 加载文章
+      const dbArticles = await getAllArticles();
+
+      // 从 localStorage 加载本地文章（兼容旧数据）
+      const localArticles = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+
+      // 合并文章（数据库文章优先）
+      const allArticles = [...dbArticles, ...sampleArticles, ...localArticles];
+      setArticles(allArticles);
+    } catch (err) {
+      console.error('Error loading articles:', err);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -43,7 +68,6 @@ export default function AdminPage() {
 
     try {
       if (isLoginMode) {
-        // 登录
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -52,10 +76,20 @@ export default function AdminPage() {
         if (error) throw error;
 
         if (data.user) {
+          setUserId(data.user.id);
           setIsLoggedIn(true);
+
+          // 检查管理员权限
+          const adminStatus = await checkIsAdmin(data.user.id);
+          setIsAdmin(adminStatus);
+
+          if (!adminStatus) {
+            setError('登录成功，但您还没有管理员权限。请联系站长将您添加为管理员。');
+          } else {
+            await loadArticles();
+          }
         }
       } else {
-        // 注册
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -64,9 +98,8 @@ export default function AdminPage() {
         if (error) throw error;
 
         if (data.user) {
-          // 注册成功，自动登录
-          setIsLoggedIn(true);
-          alert('注册成功！欢迎加入！');
+          alert('注册成功！请等待管理员授权后再访问管理后台。');
+          setIsLoginMode(true);
         }
       }
     } catch (err: any) {
@@ -76,10 +109,37 @@ export default function AdminPage() {
     }
   };
 
-  // 退出登录
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsLoggedIn(false);
+    setIsAdmin(false);
+    setUserId('');
+  };
+
+  const handleDeleteArticle = async (id: string) => {
+    if (!isAdmin) {
+      alert('您没有权限删除文章');
+      return;
+    }
+
+    if (!confirm('确定要删除这篇文章吗？')) return;
+
+    try {
+      // 尝试从数据库删除
+      await deleteArticleFromDb(id);
+
+      // 从 localStorage 删除（兼容旧数据）
+      const localArticles = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+      const updatedLocalArticles = localArticles.filter((a: any) => a.id !== id);
+      localStorage.setItem('publishedArticles', JSON.stringify(updatedLocalArticles));
+
+      // 更新显示
+      await loadArticles();
+      alert('删除成功');
+    } catch (err: any) {
+      console.error('Error deleting article:', err);
+      alert('删除失败：' + err.message);
+    }
   };
 
   if (!isLoggedIn) {
@@ -88,7 +148,7 @@ export default function AdminPage() {
         <div className="max-w-md w-full mx-4">
           <div className="bg-cinema-dark p-8 rounded-lg border border-cinema-gray">
             <h1 className="cinema-title text-3xl text-cinema-gold mb-6 text-center">
-              {isLoginMode ? '管理后台登录' : '注册管理员账号'}
+              {isLoginMode ? '管理后台登录' : '注册账号'}
             </h1>
 
             {error && (
@@ -153,17 +213,30 @@ export default function AdminPage() {
     );
   }
 
-  const handleDeleteArticle = (id: string) => {
-    if (confirm('确定要删除这篇文章吗？')) {
-      // 从已发布文章中删除
-      const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
-      const updatedPublished = published.filter((a: any) => a.id !== id);
-      localStorage.setItem('publishedArticles', JSON.stringify(updatedPublished));
-
-      // 更新显示列表
-      setArticles([...sampleArticles, ...updatedPublished]);
-    }
-  };
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-cinema-black flex items-center justify-center">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-cinema-dark p-8 rounded-lg border border-cinema-gray">
+            <h1 className="cinema-title text-3xl text-cinema-gold mb-6 text-center">权限不足</h1>
+            <p className="text-cinema-silver text-center mb-6">
+              您还没有管理员权限，请联系站长授权。
+            </p>
+            <div className="text-center">
+              <p className="text-cinema-gray text-sm mb-2">您的用户 ID:</p>
+              <code className="text-cinema-gold text-xs break-all">{userId}</code>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="mt-6 w-full px-6 py-3 bg-cinema-gray hover:bg-cinema-gold hover:text-cinema-black rounded transition-colors"
+            >
+              退出登录
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cinema-black flex flex-col">
@@ -327,23 +400,8 @@ export default function AdminPage() {
           {activeTab === 'comments' && (
             <div className="bg-cinema-dark rounded-lg border border-cinema-gray p-6">
               <h2 className="text-xl text-white mb-6">评论管理</h2>
-              <div className="space-y-4">
-                {[
-                  { id: '1', author: 'Alex Chen', content: '这篇文章写得非常好！', article: '探索电影质感的前端设计', date: '2025-01-09' },
-                  { id: '2', author: 'Sarah Wu', content: '期待更多内容', article: 'TypeScript 进阶', date: '2025-01-08' },
-                ].map((comment) => (
-                  <div key={comment.id} className="bg-cinema-black p-4 rounded border border-cinema-gray">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-white font-semibold">{comment.author}</p>
-                        <p className="text-cinema-gray text-xs">{comment.date}</p>
-                      </div>
-                      <button className="text-red-500 hover:text-red-400 text-sm">删除</button>
-                    </div>
-                    <p className="text-cinema-silver text-sm mb-2">{comment.content}</p>
-                    <p className="text-cinema-gold text-xs">文章: {comment.article}</p>
-                  </div>
-                ))}
+              <div className="text-cinema-silver">
+                评论管理功能开发中...
               </div>
             </div>
           )}
