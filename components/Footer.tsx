@@ -2,9 +2,9 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-cinema-dark border-t border-cinema-gray mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="bg-cinema-dark border-t border-cinema-gray mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* About */}
           <div>
             <h3 className="cinema-title text-xl text-cinema-gold mb-4">Justin&apos;s Blog</h3>
@@ -73,11 +73,11 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-cinema-gray text-center">
+        <div className="mt-6 pt-4 border-t border-cinema-gray text-center">
           <p className="text-cinema-silver text-sm">
             © {new Date().getFullYear()} Justin Tian. All rights reserved.
           </p>
-          <p className="text-cinema-gray text-xs mt-2">
+          <p className="text-cinema-gray text-xs mt-1">
             Crafted with passion and code
           </p>
         </div>

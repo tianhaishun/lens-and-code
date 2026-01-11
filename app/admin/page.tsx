@@ -7,9 +7,54 @@ import Footer from '@/components/Footer';
 
 export default function AdminPage() {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('articles');
 
-  // Mock articles data
+  // 简单的密码验证
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === 'admin123') {
+      setIsLoggedIn(true);
+    } else {
+      alert('密码错误，提示：admin123');
+    }
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-cinema-black flex items-center justify-center">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-cinema-dark p-8 rounded-lg border border-cinema-gray">
+            <h1 className="cinema-title text-3xl text-cinema-gold mb-6 text-center">管理后台登录</h1>
+            <form onSubmit={handleLogin}>
+              <div className="mb-6">
+                <label htmlFor="password" className="block text-cinema-silver text-sm mb-2">
+                  管理员密码
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-3 text-white focus:outline-none focus:border-cinema-gold transition-colors"
+                  placeholder="请输入密码 (admin123)"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full px-6 py-3 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors"
+              >
+                登录
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [articles, setArticles] = useState([
     {
       id: '1',
@@ -69,7 +114,15 @@ export default function AdminPage() {
 
       <div className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="cinema-title text-4xl text-white mb-8">管理后台</h1>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="cinema-title text-4xl text-white">管理后台</h1>
+            <button
+              onClick={() => setIsLoggedIn(false)}
+              className="px-4 py-2 bg-cinema-gray hover:bg-cinema-gold hover:text-cinema-black rounded transition-colors text-sm"
+            >
+              退出登录
+            </button>
+          </div>
 
           {/* Tabs */}
           <div className="flex gap-4 mb-8 border-b border-cinema-gray">
@@ -84,12 +137,8 @@ export default function AdminPage() {
               文章管理
             </button>
             <button
-              onClick={() => setActiveTab('create')}
-              className={`px-6 py-3 text-sm font-semibold transition-colors ${
-                activeTab === 'create'
-                  ? 'text-cinema-gold border-b-2 border-cinema-gold'
-                  : 'text-cinema-silver hover:text-white'
-              }`}
+              onClick={() => router.push('/admin/editor')}
+              className="px-6 py-3 text-sm font-semibold transition-colors text-cinema-gold border-b-2 border-cinema-gold"
             >
               发布文章
             </button>
