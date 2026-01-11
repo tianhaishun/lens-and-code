@@ -19,6 +19,12 @@ export default function AdminPage() {
     // 加载示例文章 + 已发布的文章
     const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
     setArticles([...sampleArticles, ...published]);
+
+    // 检查登录状态
+    const loggedIn = localStorage.getItem('adminLoggedIn');
+    if (loggedIn === 'true') {
+      setIsLoggedIn(true);
+    }
   }, []);
 
   // 简单的密码验证
@@ -26,9 +32,16 @@ export default function AdminPage() {
     e.preventDefault();
     if (password === 'admin123') {
       setIsLoggedIn(true);
+      localStorage.setItem('adminLoggedIn', 'true'); // 保存登录状态
     } else {
       alert('密码错误，提示：admin123');
     }
+  };
+
+  // 退出登录
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem('adminLoggedIn'); // 清除登录状态
   };
 
   if (!isLoggedIn) {
@@ -80,7 +93,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between mb-8">
             <h1 className="cinema-title text-4xl text-white">管理后台</h1>
             <button
-              onClick={() => setIsLoggedIn(false)}
+              onClick={handleLogout}
               className="px-4 py-2 bg-cinema-gray hover:bg-cinema-gold hover:text-cinema-black rounded transition-colors text-sm"
             >
               退出登录

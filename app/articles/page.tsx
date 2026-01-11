@@ -4,15 +4,22 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { articles } from '@/data/sampleData';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ArticlesPage() {
   const [selectedCategory, setSelectedCategory] = useState('全部');
   const categories = ['全部', '技术', '设计', '生活'];
+  const [allArticles, setAllArticles] = useState(articles);
+
+  // 从 localStorage 加载已发布的文章
+  useEffect(() => {
+    const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+    setAllArticles([...articles, ...published]);
+  }, []);
 
   const filteredArticles = selectedCategory === '全部'
-    ? articles
-    : articles.filter(article => article.category === selectedCategory);
+    ? allArticles
+    : allArticles.filter(article => article.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-cinema-black flex flex-col">

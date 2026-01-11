@@ -12,6 +12,14 @@ export default function EditorPage() {
   const [category, setCategory] = useState('技术');
   const [saveStatus, setSaveStatus] = useState('');
 
+  // 检查登录状态
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('adminLoggedIn');
+    if (isLoggedIn !== 'true') {
+      router.push('/admin');
+    }
+  }, [router]);
+
   // 编辑器设置
   const [paperSize, setPaperSize] = useState<'a4' | 'a5' | 'letter'>('a4');
   const [fontSize, setFontSize] = useState('16');
