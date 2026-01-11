@@ -1,15 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import { articles as sampleArticles } from '@/data/sampleData';
 
 export default function AdminPage() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('articles');
+
+  // 从 localStorage 加载已发布的文章
+  const [articles, setArticles] = useState<typeof sampleArticles>([]);
+
+  useEffect(() => {
+    // 加载示例文章 + 已发布的文章
+    const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+    setArticles([...sampleArticles, ...published]);
+  }, []);
 
   // 简单的密码验证
   const handleLogin = (e: React.FormEvent) => {
@@ -54,53 +64,6 @@ export default function AdminPage() {
       </div>
     );
   }
-
-  const [articles, setArticles] = useState([
-    {
-      id: '1',
-      title: '探索电影质感的前端设计',
-      category: '设计',
-      date: '2025-01-10',
-      status: 'published',
-    },
-    {
-      id: '2',
-      title: 'TypeScript 进阶：类型体操的艺术',
-      category: '技术',
-      date: '2025-01-08',
-      status: 'published',
-    },
-  ]);
-
-  // New article form
-  const [newArticle, setNewArticle] = useState({
-    title: '',
-    excerpt: '',
-    content: '',
-    category: '技术',
-    coverImage: '',
-    featured: false,
-  });
-
-  const handleCreateArticle = (e: React.FormEvent) => {
-    e.preventDefault();
-    const article = {
-      id: Date.now().toString(),
-      ...newArticle,
-      date: new Date().toISOString().split('T')[0],
-      status: 'published',
-    };
-    setArticles([article, ...articles]);
-    setNewArticle({
-      title: '',
-      excerpt: '',
-      content: '',
-      category: '技术',
-      coverImage: '',
-      featured: false,
-    });
-    alert('文章发布成功！');
-  };
 
   const handleDeleteArticle = (id: string) => {
     if (confirm('确定要删除这篇文章吗？')) {
@@ -156,26 +119,80 @@ export default function AdminPage() {
 
           {/* Articles Tab */}
           {activeTab === 'articles' && (
-            <div className="bg-cinema-dark rounded-lg border border-cinema-gray overflow-hidden">
-              <div className="p-6 border-b border-cinema-gray">
-                <h2 className="text-xl text-white">文章列表</h2>
+            <div className="space-y-6">
+              {/* 统计卡片 */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-cinema-dark p-6 rounded-lg border border-cinema-gray">
+                  <div className="text-cinema-silver text-sm mb-1">总文章数</div>
+                  <div className="text-3xl font-bold text-cinema-gold">{articles.length}</div>
+                </div>
+                <div className="bg-cinema-dark p-6 rounded-lg border border-cinema-gray">
+                  <div className="text-cinema-silver text-sm mb-1">技术文章</div>
+                  <div className="text-3xl font-bold text-white">
+                    {articles.filter(a => a.category === '技术').length}
+                  </div>
+                </div>
+                <div className="bg-cinema-dark p-6 rounded-lg border border-cinema-gray">
+                  <div className="text-cinema-silver text-sm mb-1">设计文章</div>
+                  <div className="text-3xl font-bold text-white">
+                    {articles.filter(a => a.category === '设计').length}
+                  </div>
+                </div>
+                <div className="bg-cinema-dark p-6 rounded-lg border border-cinema-gray">
+                  <div className="text-cinema-silver text-sm mb-1">生活文章</div>
+                  <div className="text-3xl font-bold text-white">
+                    {articles.filter(a => a.category === '生活').length}
+                  </div>
+                </div>
               </div>
-              <div className="divide-y divide-cinema-gray">
+
+              {/* 文章列表 */}
+              <div className="bg-cinema-dark rounded-lg border border-cinema-gray overflow-hidden">
+                <div className="p-6 border-b border-cinema-gray flex items-center justify-between">
+                  <h2 className="text-xl text-white">文章列表</h2>
+                  <button
+                    onClick={() => router.push('/admin/editor')}
+                    className="px-4 py-2 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors text-sm"
+                  >
+                    + 新建文章
+                  </button>
+                </div>
+                <div className="divide-y divide-cinema-gray">
                 {articles.map((article) => (
                   <div key={article.id} className="p-6 flex items-center justify-between hover:bg-cinema-gray/50 transition-colors">
                     <div className="flex-1">
-                      <h3 className="text-lg text-white mb-1">{article.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-cinema-silver">
-                        <span>{article.category}</span>
-                        <span>{article.date}</span>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg text-white">{article.title}</h3>
                         <span className={`px-2 py-1 rounded text-xs ${
-                          article.status === 'published' ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'
+                          article.featured
+                            ? 'bg-cinema-gold text-cinema-black'
+                            : 'bg-cinema-gray text-cinema-silver'
                         }`}>
-                          {article.status === 'published' ? '已发布' : '草稿'}
+                          {article.featured ? '精选' : '普通'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-cinema-silver">
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          {article.category}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {article.date}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {article.readTime}
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => router.push(`/articles/${article.id}`)}
                         className="p-2 text-cinema-silver hover:text-cinema-gold transition-colors"
@@ -184,6 +201,18 @@ export default function AdminPage() {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => {
+                          // TODO: 实现编辑功能
+                          alert('编辑功能即将上线，敬请期待！');
+                        }}
+                        className="p-2 text-cinema-silver hover:text-cinema-gold transition-colors"
+                        title="编辑"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       <button
@@ -198,128 +227,8 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Create Article Tab */}
-          {activeTab === 'create' && (
-            <div className="bg-cinema-dark rounded-lg border border-cinema-gray p-6">
-              <h2 className="text-xl text-white mb-6">发布新文章</h2>
-              <form onSubmit={handleCreateArticle} className="space-y-6">
-                <div>
-                  <label htmlFor="title" className="block text-cinema-silver text-sm mb-2">
-                    标题
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    value={newArticle.title}
-                    onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
-                    className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors"
-                    placeholder="请输入文章标题"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="excerpt" className="block text-cinema-silver text-sm mb-2">
-                    摘要
-                  </label>
-                  <textarea
-                    id="excerpt"
-                    value={newArticle.excerpt}
-                    onChange={(e) => setNewArticle({ ...newArticle, excerpt: e.target.value })}
-                    rows={3}
-                    className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors resize-none"
-                    placeholder="请输入文章摘要"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="content" className="block text-cinema-silver text-sm mb-2">
-                    内容
-                  </label>
-                  <textarea
-                    id="content"
-                    value={newArticle.content}
-                    onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
-                    rows={15}
-                    className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors resize-none font-mono"
-                    placeholder="请输入文章内容（支持 Markdown）"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="category" className="block text-cinema-silver text-sm mb-2">
-                      分类
-                    </label>
-                    <select
-                      id="category"
-                      value={newArticle.category}
-                      onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
-                      className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors"
-                    >
-                      <option value="技术">技术</option>
-                      <option value="设计">设计</option>
-                      <option value="生活">生活</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="coverImage" className="block text-cinema-silver text-sm mb-2">
-                      封面图片 URL
-                    </label>
-                    <input
-                      type="url"
-                      id="coverImage"
-                      value={newArticle.coverImage}
-                      onChange={(e) => setNewArticle({ ...newArticle, coverImage: e.target.value })}
-                      className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors"
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="featured"
-                    checked={newArticle.featured}
-                    onChange={(e) => setNewArticle({ ...newArticle, featured: e.target.checked })}
-                    className="w-4 h-4 bg-cinema-black border-cinema-gray rounded"
-                  />
-                  <label htmlFor="featured" className="text-cinema-silver text-sm">
-                    设为精选文章
-                  </label>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="submit"
-                    className="px-6 py-3 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors"
-                  >
-                    发布文章
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewArticle({
-                      title: '',
-                      excerpt: '',
-                      content: '',
-                      category: '技术',
-                      coverImage: '',
-                      featured: false,
-                    })}
-                    className="px-6 py-3 bg-cinema-gray text-cinema-silver rounded hover:bg-cinema-gray/80 transition-colors"
-                  >
-                    重置
-                  </button>
-                </div>
-              </form>
             </div>
           )}
 
