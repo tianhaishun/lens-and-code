@@ -91,6 +91,30 @@ function EditorContent() {
     setContent(content + emoji);
   };
 
+  // 插入格式化文本
+  const insertFormat = (before: string, after: string = '', placeholder: string = '') => {
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end) || placeholder;
+    const newText = content.substring(0, start) + before + selectedText + after + content.substring(end);
+    setContent(newText);
+  };
+
+  // 格式化选项
+  const formatOptions = [
+    { label: '标题', action: () => insertFormat('# ', '', '标题') },
+    { label: '粗体', action: () => insertFormat('**', '**', '粗体文本') },
+    { label: '斜体', action: () => insertFormat('*', '*', '斜体文本') },
+    { label: '引用', action: () => insertFormat('> ', '', '引用内容') },
+    { label: '代码', action: () => insertFormat('`', '`', '代码') },
+    { label: '链接', action: () => insertFormat('[', '](url)', '链接文字') },
+    { label: '分割线', action: () => insertFormat('\n---\n', '', '') },
+    { label: '列表', action: () => insertFormat('\n- ', '', '列表项') },
+  ];
+
   // 发布或更新文章
   const handlePublish = () => {
     if (!pageTitle || !content) {
@@ -281,12 +305,47 @@ function EditorContent() {
                       onChange={(e) => setFontFamily(e.target.value)}
                       className="w-full bg-cinema-black border border-cinema-gray rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-cinema-gold"
                     >
-                      <option value="Georgia">Georgia (衬线)</option>
-                      <option value="Arial">Arial (无衬线)</option>
-                      <option value="'Courier New'">Courier New (等宽)</option>
-                      <option value="'Times New Roman'">Times New Roman (经典)</option>
+                      <optgroup label="衬线字体">
+                        <option value="Georgia">Georgia (优雅)</option>
+                        <option value="'Times New Roman'">Times New Roman (经典)</option>
+                        <option value="'Palatino Linotype'">Palatino (专业)</option>
+                        <option value="'Book Antiqua'">Book Antiqua (文艺)</option>
+                      </optgroup>
+                      <optgroup label="无衬线字体">
+                        <option value="Arial">Arial (现代)</option>
+                        <option value="'Helvetica Neue'">Helvetica (简洁)</option>
+                        <option value="'Segoe UI'">Segoe UI (清晰)</option>
+                        <option value="Verdana">Verdana (易读)</option>
+                      </optgroup>
+                      <optgroup label="等宽字体">
+                        <option value="'Courier New'">Courier New (复古)</option>
+                        <option value="'Lucida Console'">Lucida Console (代码)</option>
+                        <option value="Monaco">Monaco (简洁)</option>
+                      </optgroup>
+                      <optgroup label="中文特色">
+                        <option value="'Microsoft YaHei'">微软雅黑</option>
+                        <option value="'SimSun'">宋体</option>
+                        <option value="'KaiTi'">楷体</option>
+                      </optgroup>
                     </select>
                   </div>
+                </div>
+              </div>
+
+              {/* 格式化工具 */}
+              <div className="bg-cinema-dark p-4 rounded-lg border border-cinema-gray">
+                <h3 className="text-white font-semibold mb-3">格式化工具</h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {formatOptions.map((option) => (
+                    <button
+                      key={option.label}
+                      onClick={option.action}
+                      className="px-3 py-2 bg-cinema-black hover:bg-cinema-gray rounded transition-colors text-sm text-cinema-silver hover:text-white"
+                      title={option.label}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 

@@ -20,6 +20,13 @@ interface Article {
   featured: boolean;
 }
 
+interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  date: string;
+}
+
 interface ArticlePageClientProps {
   articleId: string;
 }
@@ -29,6 +36,8 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [allArticles, setAllArticles] = useState<Article[]>(sampleArticles);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState({ author: '', content: '' });
 
   useEffect(() => {
     console.log('🔍 Loading article:', articleId);
@@ -51,12 +60,36 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
 
       setAllArticles(articles);
       setArticle(foundArticle || null);
+
+      // 加载评论
+      const savedComments = localStorage.getItem(`comments_${articleId}`);
+      if (savedComments) {
+        setComments(JSON.parse(savedComments));
+      }
     } catch (error) {
       console.error('❌ Error loading article:', error);
     } finally {
       setLoading(false);
     }
   }, [articleId]);
+
+  // 处理评论提交
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newComment.author && newComment.content) {
+      const comment: Comment = {
+        id: Date.now().toString(),
+        author: newComment.author,
+        content: newComment.content,
+        date: new Date().toISOString().split('T')[0],
+      };
+
+      const updatedComments = [...comments, comment];
+      setComments(updatedComments);
+      localStorage.setItem(`comments_${articleId}`, JSON.stringify(updatedComments));
+      setNewComment({ author: '', content: '' });
+    }
+  };
 
   if (loading) {
     return (
@@ -166,6 +199,81 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Comments Section */}
+        <section className="py-16 bg-cinema-dark">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="cinema-title text-3xl text-white mb-8">
+              评论 ({comments.length})
+            </h2>
+
+            {/* Comment Form */}
+            <form onSubmit={handleCommentSubmit} className="mb-12">
+              <div className="bg-cinema-black p-6 rounded-lg border border-cinema-gray">
+                <div className="mb-4">
+                  <label htmlFor="author" className="block text-cinema-silver text-sm mb-2">
+                    名称
+                  </label>
+                  <input
+                    type="text"
+                    id="author"
+                    value={newComment.author}
+                    onChange={(e) => setNewComment({ ...newComment, author: e.target.value })}
+                    className="w-full bg-cinema-dark border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors"
+                    placeholder="请输入您的名称"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label htmlFor="content" className="block text-cinema-silver text-sm mb-2">
+                    评论内容
+                  </label>
+                  <textarea
+                    id="content"
+                    value={newComment.content}
+                    onChange={(e) => setNewComment({ ...newComment, content: e.target.value })}
+                    rows={4}
+                    className="w-full bg-cinema-dark border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors resize-none"
+                    placeholder="分享您的想法..."
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors"
+                >
+                  发表评论
+                </button>
+              </div>
+            </form>
+
+            {/* Comments List */}
+            {comments.length > 0 ? (
+              <div className="space-y-6">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="bg-cinema-black p-6 rounded-lg border border-cinema-gray">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-cinema-gray rounded-full flex items-center justify-center">
+                          <span className="text-cinema-gold font-semibold">{comment.author[0]}</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">{comment.author}</p>
+                          <p className="text-cinema-gray text-xs">{comment.date}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-cinema-silver leading-relaxed whitespace-pre-line">{comment.content}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-cinema-silver">
+                <p>还没有评论，快来发表第一条评论吧！</p>
+              </div>
+            )}
           </div>
         </section>
 
