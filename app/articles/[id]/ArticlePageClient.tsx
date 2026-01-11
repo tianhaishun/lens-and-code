@@ -13,15 +13,21 @@ interface ArticlePageClientProps {
 
 export default function ArticlePageClient({ articleId }: ArticlePageClientProps) {
   const router = useRouter();
-  const [articles, setArticles] = useState(sampleArticles);
-  const [article, setArticle] = useState(articles.find(a => a.id === articleId));
+  const [article, setArticle] = useState<typeof sampleArticles[0] | null>(null);
+  const [allArticles, setAllArticles] = useState(sampleArticles);
+  const [loading, setLoading] = useState(true);
 
   // 从 localStorage 加载已发布的文章
   useEffect(() => {
     const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
-    const allArticles = [...sampleArticles, ...published];
-    setArticles(allArticles);
-    setArticle(allArticles.find(a => a.id === articleId));
+    const articles = [...sampleArticles, ...published];
+    const foundArticle = articles.find(a => a.id === articleId);
+
+    setAllArticles(articles);
+    if (foundArticle) {
+      setArticle(foundArticle);
+    }
+    setLoading(false);
   }, [articleId]);
 
   const [comments, setComments] = useState([
@@ -40,6 +46,14 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
   ]);
 
   const [newComment, setNewComment] = useState({ author: '', content: '' });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-cinema-black flex items-center justify-center">
+        <div className="text-cinema-gold text-xl">加载中...</div>
+      </div>
+    );
+  }
 
   if (!article) {
     return (
@@ -242,12 +256,12 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
             <div className="flex justify-between">
               <button
                 onClick={() => {
-                  const currentIndex = articles.findIndex(a => a.id === article.id);
+                  const currentIndex = allArticles.findIndex(a => a.id === article.id);
                   if (currentIndex > 0) {
-                    router.push(`/articles/${articles[currentIndex - 1].id}`);
+                    router.push(`/articles/${allArticles[currentIndex - 1].id}`);
                   }
                 }}
-                disabled={articles.findIndex(a => a.id === article.id) === 0}
+                disabled={allArticles.findIndex(a => a.id === article.id) === 0}
                 className="flex items-center gap-2 px-6 py-3 bg-cinema-dark hover:bg-cinema-gray rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -257,12 +271,12 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
               </button>
               <button
                 onClick={() => {
-                  const currentIndex = articles.findIndex(a => a.id === article.id);
-                  if (currentIndex < articles.length - 1) {
-                    router.push(`/articles/${articles[currentIndex + 1].id}`);
+                  const currentIndex = allArticles.findIndex(a => a.id === article.id);
+                  if (currentIndex < allArticles.length - 1) {
+                    router.push(`/articles/${allArticles[currentIndex + 1].id}`);
                   }
                 }}
-                disabled={articles.findIndex(a => a.id === article.id) === articles.length - 1}
+                disabled={allArticles.findIndex(a => a.id === article.id) === allArticles.length - 1}
                 className="flex items-center gap-2 px-6 py-3 bg-cinema-dark hover:bg-cinema-gray rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 下一篇
