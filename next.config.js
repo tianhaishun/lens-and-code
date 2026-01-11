@@ -1,17 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'export', // 静态导出，用于 Netlify 和 GitHub Pages
+  trailingSlash: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'github.com',
-      },
-    ],
+    unoptimized: true, // 静态导出需要禁用图片优化
   },
 }
 
