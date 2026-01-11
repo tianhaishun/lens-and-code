@@ -27,6 +27,11 @@ export default function AdminPage() {
   }, []);
 
   const checkSession = async () => {
+    if (!supabase) {
+      setError('Supabase 未配置，请在 Netlify 控制台设置环境变量');
+      return;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       setUserId(session.user.id);
@@ -65,6 +70,12 @@ export default function AdminPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    if (!supabase) {
+      setError('Supabase 未配置，无法登录');
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isLoginMode) {
@@ -110,7 +121,9 @@ export default function AdminPage() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setIsLoggedIn(false);
     setIsAdmin(false);
     setUserId('');

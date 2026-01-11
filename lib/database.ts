@@ -3,6 +3,8 @@ import { Article } from './supabase'
 
 // 检查用户是否是管理员
 export async function checkIsAdmin(userId: string): Promise<boolean> {
+  if (!supabase) return false
+
   const { data, error } = await supabase
     .from('admin_users')
     .select('is_admin')
@@ -15,6 +17,8 @@ export async function checkIsAdmin(userId: string): Promise<boolean> {
 
 // 获取所有文章
 export async function getAllArticles(): Promise<Article[]> {
+  if (!supabase) return []
+
   const { data, error } = await supabase
     .from('articles')
     .select('*')
@@ -30,6 +34,8 @@ export async function getAllArticles(): Promise<Article[]> {
 
 // 根据ID获取文章
 export async function getArticleById(id: string): Promise<Article | null> {
+  if (!supabase) return null
+
   const { data, error } = await supabase
     .from('articles')
     .select('*')
@@ -46,6 +52,8 @@ export async function getArticleById(id: string): Promise<Article | null> {
 
 // 创建文章
 export async function createArticle(article: Omit<Article, 'created_at' | 'updated_at'>): Promise<boolean> {
+  if (!supabase) return false
+
   const { error } = await supabase
     .from('articles')
     .insert(article)
@@ -60,6 +68,8 @@ export async function createArticle(article: Omit<Article, 'created_at' | 'updat
 
 // 更新文章
 export async function updateArticle(id: string, article: Partial<Article>): Promise<boolean> {
+  if (!supabase) return false
+
   const { error } = await supabase
     .from('articles')
     .update({ ...article, updated_at: new Date().toISOString() })
@@ -75,6 +85,8 @@ export async function updateArticle(id: string, article: Partial<Article>): Prom
 
 // 删除文章
 export async function deleteArticle(id: string): Promise<boolean> {
+  if (!supabase) return false
+
   const { error } = await supabase
     .from('articles')
     .delete()
@@ -90,6 +102,8 @@ export async function deleteArticle(id: string): Promise<boolean> {
 
 // 获取文章的所有评论
 export async function getCommentsByArticleId(articleId: string) {
+  if (!supabase) return []
+
   const { data, error } = await supabase
     .from('comments')
     .select('*')
@@ -112,6 +126,8 @@ export async function createComment(comment: {
   content: string
   email?: string
 }): Promise<boolean> {
+  if (!supabase) return false
+
   const { error } = await supabase
     .from('comments')
     .insert(comment)
@@ -126,6 +142,8 @@ export async function createComment(comment: {
 
 // 删除评论
 export async function deleteComment(id: string): Promise<boolean> {
+  if (!supabase) return false
+
   const { error } = await supabase
     .from('comments')
     .delete()
@@ -141,6 +159,8 @@ export async function deleteComment(id: string): Promise<boolean> {
 
 // 设置用户为管理员（需要手动在数据库执行）
 export async function setUserAsAdmin(userId: string): Promise<boolean> {
+  if (!supabase) return false
+
   const { error } = await supabase
     .from('admin_users')
     .insert({ user_id: userId, is_admin: true })

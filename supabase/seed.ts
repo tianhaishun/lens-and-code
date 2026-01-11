@@ -3,6 +3,11 @@ import { supabase } from '../lib/supabase'
 export async function seedDatabase() {
   console.log('开始初始化数据库...')
 
+  if (!supabase) {
+    console.error('Supabase 未配置，无法初始化数据库')
+    return
+  }
+
   // 插入示例文章
   const articles = [
     {
