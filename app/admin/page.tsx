@@ -80,7 +80,13 @@ export default function AdminPage() {
 
   const handleDeleteArticle = (id: string) => {
     if (confirm('确定要删除这篇文章吗？')) {
-      setArticles(articles.filter(a => a.id !== id));
+      // 从已发布文章中删除
+      const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+      const updatedPublished = published.filter((a: any) => a.id !== id);
+      localStorage.setItem('publishedArticles', JSON.stringify(updatedPublished));
+
+      // 更新显示列表
+      setArticles([...sampleArticles, ...updatedPublished]);
     }
   };
 
@@ -217,10 +223,7 @@ export default function AdminPage() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => {
-                          // TODO: 实现编辑功能
-                          alert('编辑功能即将上线，敬请期待！');
-                        }}
+                        onClick={() => router.push(`/admin/editor?edit=${article.id}`)}
                         className="p-2 text-cinema-silver hover:text-cinema-gold transition-colors"
                         title="编辑"
                       >

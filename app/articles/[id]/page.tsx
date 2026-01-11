@@ -1,5 +1,5 @@
-import { articles } from '@/data/sampleData';
 import ArticlePageClient from './ArticlePageClient';
+import { articles } from '@/data/sampleData';
 
 export function generateStaticParams() {
   return articles.map((article) => ({

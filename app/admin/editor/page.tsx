@@ -1,16 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
+import { articles as sampleArticles } from '@/data/sampleData';
 
-export default function EditorPage() {
+function EditorContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editArticleId = searchParams.get('edit');
+
   const [pageTitle, setPageTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [category, setCategory] = useState('技术');
   const [saveStatus, setSaveStatus] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // 检查登录状态
   useEffect(() => {
@@ -20,53 +25,73 @@ export default function EditorPage() {
     }
   }, [router]);
 
+  // 加载要编辑的文章
+  useEffect(() => {
+    if (editArticleId) {
+      setIsEditMode(true);
+      const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+      const allArticles = [...sampleArticles, ...published];
+      const articleToEdit = allArticles.find(a => a.id === editArticleId);
+
+      if (articleToEdit) {
+        setPageTitle(articleToEdit.title);
+        setContent(articleToEdit.content);
+        setExcerpt(articleToEdit.excerpt || '');
+        setCategory(articleToEdit.category);
+      } else {
+        alert('文章未找到');
+        router.push('/admin');
+      }
+    } else {
+      // 从 localStorage 加载草稿
+      const savedDraft = localStorage.getItem('articleDraft');
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        setPageTitle(draft.title || '');
+        setContent(draft.content || '');
+        setExcerpt(draft.excerpt || '');
+        setCategory(draft.category || '技术');
+        setPaperSize(draft.paperSize || 'a4');
+        setFontSize(draft.fontSize || '16');
+        setFontFamily(draft.fontFamily || 'Georgia');
+      }
+    }
+  }, [editArticleId, router]);
+
   // 编辑器设置
   const [paperSize, setPaperSize] = useState<'a4' | 'a5' | 'letter'>('a4');
   const [fontSize, setFontSize] = useState('16');
   const [fontFamily, setFontFamily] = useState('Georgia');
   const [lineHeight, setLineHeight] = useState('1.8');
 
-  // 从 localStorage 加载草稿
-  useEffect(() => {
-    const savedDraft = localStorage.getItem('articleDraft');
-    if (savedDraft) {
-      const draft = JSON.parse(savedDraft);
-      setPageTitle(draft.title || '');
-      setContent(draft.content || '');
-      setExcerpt(draft.excerpt || '');
-      setCategory(draft.category || '技术');
-      setPaperSize(draft.paperSize || 'a4');
-      setFontSize(draft.fontSize || '16');
-      setFontFamily(draft.fontFamily || 'Georgia');
-    }
-  }, []);
-
   // 自动保存草稿
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const draft = {
-        title: pageTitle,
-        content,
-        excerpt,
-        category,
-        paperSize,
-        fontSize,
-        fontFamily,
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem('articleDraft', JSON.stringify(draft));
-      setSaveStatus(`已自动保存 ${new Date().toLocaleTimeString()}`);
-    }, 2000);
+    if (!isEditMode) {
+      const timer = setTimeout(() => {
+        const draft = {
+          title: pageTitle,
+          content,
+          excerpt,
+          category,
+          paperSize,
+          fontSize,
+          fontFamily,
+          savedAt: new Date().toISOString(),
+        };
+        localStorage.setItem('articleDraft', JSON.stringify(draft));
+        setSaveStatus(`已自动保存 ${new Date().toLocaleTimeString()}`);
+      }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [pageTitle, content, excerpt, category, paperSize, fontSize, fontFamily]);
+      return () => clearTimeout(timer);
+    }
+  }, [pageTitle, content, excerpt, category, paperSize, fontSize, fontFamily, isEditMode]);
 
   // 插入表情符号
   const insertEmoji = (emoji: string) => {
     setContent(content + emoji);
   };
 
-  // 发布文章
+  // 发布或更新文章
   const handlePublish = () => {
     if (!pageTitle || !content) {
       alert('请填写标题和内容');
@@ -74,7 +99,7 @@ export default function EditorPage() {
     }
 
     const article = {
-      id: Date.now().toString(),
+      id: isEditMode ? editArticleId! : Date.now().toString(),
       title: pageTitle,
       content,
       excerpt: excerpt || content.substring(0, 200),
@@ -86,14 +111,29 @@ export default function EditorPage() {
       featured: false,
     };
 
-    // 保存到 localStorage (实际应用中应该保存到数据库)
-    const existingArticles = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
-    localStorage.setItem('publishedArticles', JSON.stringify([article, ...existingArticles]));
+    // 获取已发布的文章
+    let existingArticles = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
 
-    // 清除草稿
-    localStorage.removeItem('articleDraft');
+    if (isEditMode) {
+      // 更新现有文章
+      const index = existingArticles.findIndex((a: any) => a.id === editArticleId);
+      if (index !== -1) {
+        existingArticles[index] = article;
+      } else {
+        // 如果在已发布文章中没找到，可能是示例文章，添加到列表
+        existingArticles.unshift(article);
+      }
+      localStorage.setItem('publishedArticles', JSON.stringify(existingArticles));
+      alert('文章更新成功！');
+    } else {
+      // 发布新文章
+      existingArticles = [article, ...existingArticles];
+      localStorage.setItem('publishedArticles', JSON.stringify(existingArticles));
+      // 清除草稿
+      localStorage.removeItem('articleDraft');
+      alert('文章发布成功！');
+    }
 
-    alert('文章发布成功！');
     router.push('/admin');
   };
 
@@ -124,7 +164,9 @@ export default function EditorPage() {
               >
                 ← 返回
               </button>
-              <h1 className="cinema-title text-2xl text-white">文章编辑器</h1>
+              <h1 className="cinema-title text-2xl text-white">
+              {isEditMode ? '编辑文章' : '文章编辑器'}
+            </h1>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-cinema-gray text-sm">{saveStatus}</span>
@@ -145,7 +187,7 @@ export default function EditorPage() {
                 onClick={handlePublish}
                 className="px-6 py-2 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors text-sm"
               >
-                发布文章
+                {isEditMode ? '更新文章' : '发布文章'}
               </button>
             </div>
           </div>
@@ -312,5 +354,17 @@ export default function EditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function EditorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-cinema-black flex items-center justify-center">
+        <div className="text-cinema-gold text-xl">加载中...</div>
+      </div>
+    }>
+      <EditorContent />
+    </Suspense>
   );
 }

@@ -14,13 +14,15 @@ interface ArticlePageClientProps {
 export default function ArticlePageClient({ articleId }: ArticlePageClientProps) {
   const router = useRouter();
   const [articles, setArticles] = useState(sampleArticles);
-  const article = articles.find(a => a.id === articleId);
+  const [article, setArticle] = useState(articles.find(a => a.id === articleId));
 
   // 从 localStorage 加载已发布的文章
   useEffect(() => {
     const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
-    setArticles([...sampleArticles, ...published]);
-  }, []);
+    const allArticles = [...sampleArticles, ...published];
+    setArticles(allArticles);
+    setArticle(allArticles.find(a => a.id === articleId));
+  }, [articleId]);
 
   const [comments, setComments] = useState([
     {
