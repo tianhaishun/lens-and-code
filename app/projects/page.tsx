@@ -7,11 +7,11 @@ import { projects } from '@/data/sampleData';
 
 export default function ProjectsPage() {
   return (
-    <div className="min-h-screen bg-cinema-black">
+    <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
       {/* Page Header */}
-      <section className="relative h-96 flex items-center justify-center overflow-hidden">
+      <section className="relative h-96 flex items-center justify-center overflow-hidden flex-shrink-0">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-cinema-black/50 to-cinema-black" />
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1920&h=1080&fit=crop')] bg-cover bg-center opacity-30" />

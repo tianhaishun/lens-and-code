@@ -15,11 +15,11 @@ export default function ArticlesPage() {
     : articles.filter(article => article.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-cinema-black">
+    <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
       {/* Page Header */}
-      <section className="relative h-96 flex items-center justify-center overflow-hidden">
+      <section className="relative h-96 flex items-center justify-center overflow-hidden flex-shrink-0">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-cinema-black/50 to-cinema-black" />
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&h=1080&fit=crop')] bg-cover bg-center opacity-30" />

@@ -19,11 +19,11 @@ export default function Home() {
   }, [featuredArticles.length]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Navigation />
 
       {/* Hero Section - Featured Articles Slider */}
-      <section className="relative h-screen overflow-hidden">
+      <section className="relative h-screen overflow-hidden flex-shrink-0">
         {featuredArticles.map((article, index) => (
           <div
             key={article.id}

@@ -4,11 +4,11 @@ import Footer from '@/components/Footer';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-cinema-black">
+    <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[70vh] flex items-center justify-center overflow-hidden flex-shrink-0">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-cinema-black/50 to-cinema-black" />
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&h=1080&fit=crop')] bg-cover bg-center opacity-20" />

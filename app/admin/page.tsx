@@ -72,7 +72,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cinema-black">
+    <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
       <div className="pt-24 pb-16">

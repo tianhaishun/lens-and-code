@@ -102,7 +102,7 @@ export default function EditorPage() {
   const emojis = ['😀', '😂', '🎉', '💡', '🔥', '✨', '💻', '🎨', '📝', '🚀', '❤️', '👍'];
 
   return (
-    <div className="min-h-screen bg-cinema-black">
+    <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
       <div className="pt-20 pb-8">
