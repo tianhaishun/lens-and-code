@@ -23,7 +23,7 @@ export default function AboutPage() {
       </section>
 
       {/* About Content */}
-      <section className="py-20">
+      <section className="py-20 flex-1">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-invert prose-lg max-w-none">
             <div className="text-cinema-silver text-lg leading-relaxed space-y-6">

@@ -100,8 +100,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Latest Articles Section */}
-      <section className="py-20 bg-cinema-black">
+      {/* Latest Articles Section & Featured Projects Preview */}
+      <div className="flex-1">
+        {/* Latest Articles Section */}
+        <section className="py-20 bg-cinema-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
             <h2 className="cinema-title text-4xl text-white">最新文章</h2>
@@ -201,6 +203,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </div>
 
       <Footer />
     </div>

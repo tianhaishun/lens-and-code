@@ -69,12 +69,12 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
   };
 
   return (
-    <div className="min-h-screen bg-cinema-black">
+    <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
       {/* Article Header */}
-      <article>
-        <header className="relative h-[70vh] overflow-hidden">
+      <article className="flex-1">
+        <header className="relative h-[70vh] overflow-hidden flex-shrink-0">
           <div
             className="absolute inset-0 bg-cover bg-center cinema-image"
             style={{ backgroundImage: `url(${article.coverImage})` }}

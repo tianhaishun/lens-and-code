@@ -113,7 +113,7 @@ export default function EditorPage() {
     <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
-      <div className="pt-20 pb-8">
+      <div className="pt-20 pb-8 flex-1">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

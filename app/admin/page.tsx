@@ -88,7 +88,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
-      <div className="pt-24 pb-16">
+      <div className="pt-24 pb-16 flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <h1 className="cinema-title text-4xl text-white">管理后台</h1>
