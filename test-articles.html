@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文章测试</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white p-8">
+  <h1 class="text-3xl mb-4">文章数据测试</h1>
+
+  <div class="space-y-4">
+    <div>
+      <h2 class="text-xl mb-2">1. 检查 localStorage</h2>
+      <button onclick="checkLocalStorage()" class="bg-blue-500 px-4 py-2 rounded">检查已发布文章</button>
+      <pre id="localStorage-result" class="bg-gray-800 p-4 mt-2 rounded"></pre>
+    </div>
+
+    <div>
+      <h2 class="text-xl mb-2">2. 测试文章加载</h2>
+      <input type="text" id="articleId" value="1" placeholder="输入文章ID" class="bg-gray-800 px-4 py-2 rounded mr-2">
+      <button onclick="testArticleLoad()" class="bg-green-500 px-4 py-2 rounded">测试加载</button>
+      <pre id="article-result" class="bg-gray-800 p-4 mt-2 rounded"></pre>
+    </div>
+
+    <div>
+      <h2 class="text-xl mb-2">3. 添加测试文章</h2>
+      <button onclick="addTestArticle()" class="bg-purple-500 px-4 py-2 rounded">添加测试文章到 localStorage</button>
+      <pre id="add-result" class="bg-gray-800 p-4 mt-2 rounded"></pre>
+    </div>
+  </div>
+
+  <script>
+    const sampleArticles = [
+      {
+        id: '1',
+        title: '探索电影质感的前端设计',
+        content: '# 探索电影质感的前端设计\n\n在数字时代，如何通过代码重现胶片电影的质感与情感？',
+        excerpt: '在数字时代，如何通过代码重现胶片电影的质感与情感？',
+        author: 'Justin Tian',
+        date: '2025-01-10',
+        readTime: '8 分钟',
+        category: '设计',
+        coverImage: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&h=800&fit=crop',
+        featured: true,
+      }
+    ];
+
+    function checkLocalStorage() {
+      const published = localStorage.getItem('publishedArticles');
+      const result = published ? JSON.parse(published) : [];
+      document.getElementById('localStorage-result').textContent =
+        `已发布文章数量: ${result.length}\n` +
+        JSON.stringify(result, null, 2);
+    }
+
+    function testArticleLoad() {
+      const articleId = document.getElementById('articleId').value;
+      const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+      const allArticles = [...sampleArticles, ...published];
+      const article = allArticles.find(a => a.id === articleId);
+
+      document.getElementById('article-result').textContent =
+        article ?
+        `找到文章:\n${JSON.stringify(article, null, 2)}` :
+        '文章未找到！';
+    }
+
+    function addTestArticle() {
+      const testArticle = {
+        id: Date.now().toString(),
+        title: '测试文章 ' + new Date().toLocaleTimeString(),
+        content: '# 测试文章\n\n这是一篇测试文章的内容。',
+        excerpt: '这是一篇测试文章的摘要。',
+        author: 'Justin Tian',
+        date: new Date().toISOString().split('T')[0],
+        readTime: '2 分钟',
+        category: '技术',
+        coverImage: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&h=800&fit=crop',
+        featured: false,
+      };
+
+      const existing = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
+      localStorage.setItem('publishedArticles', JSON.stringify([testArticle, ...existing]));
+
+      document.getElementById('add-result').textContent =
+        `添加成功！文章ID: ${testArticle.id}\n` +
+        `当前已发布文章数: ${existing.length + 1}`;
+    }
+  </script>
+</body>
+</html>

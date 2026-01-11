@@ -7,50 +7,61 @@ import Footer from '@/components/Footer';
 import { articles as sampleArticles } from '@/data/sampleData';
 import { useState, useEffect } from 'react';
 
+interface Article {
+  id: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  author: string;
+  date: string;
+  readTime: string;
+  category: string;
+  coverImage: string;
+  featured: boolean;
+}
+
 interface ArticlePageClientProps {
   articleId: string;
 }
 
 export default function ArticlePageClient({ articleId }: ArticlePageClientProps) {
   const router = useRouter();
-  const [article, setArticle] = useState<typeof sampleArticles[0] | null>(null);
-  const [allArticles, setAllArticles] = useState(sampleArticles);
+  const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+  const [allArticles, setAllArticles] = useState<Article[]>(sampleArticles);
 
-  // 从 localStorage 加载已发布的文章
   useEffect(() => {
-    const published = JSON.parse(localStorage.getItem('publishedArticles') || '[]');
-    const articles = [...sampleArticles, ...published];
-    const foundArticle = articles.find(a => a.id === articleId);
+    console.log('🔍 Loading article:', articleId);
 
-    setAllArticles(articles);
-    if (foundArticle) {
-      setArticle(foundArticle);
+    try {
+      // 从 localStorage 加载已发布的文章
+      const publishedData = localStorage.getItem('publishedArticles');
+      console.log('📦 Published articles from localStorage:', publishedData);
+
+      const published: Article[] = publishedData ? JSON.parse(publishedData) : [];
+      console.log('✅ Parsed published articles:', published.length);
+
+      // 合并所有文章
+      const articles = [...sampleArticles, ...published];
+      console.log('📚 Total articles:', articles.length);
+
+      // 查找目标文章
+      const foundArticle = articles.find(a => a.id === articleId);
+      console.log('🎯 Found article:', foundArticle ? foundArticle.title : 'NOT FOUND');
+
+      setAllArticles(articles);
+      setArticle(foundArticle || null);
+    } catch (error) {
+      console.error('❌ Error loading article:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [articleId]);
-
-  const [comments, setComments] = useState([
-    {
-      id: '1',
-      author: 'Alex Chen',
-      content: '这篇文章写得非常有深度，特别是关于色彩理论的部分，让我对前端设计有了新的认识。',
-      date: '2025-01-09',
-    },
-    {
-      id: '2',
-      author: 'Sarah Wu',
-      content: '期待更多这样的高质量内容！电影质感的设计确实能带来更好的用户体验。',
-      date: '2025-01-08',
-    },
-  ]);
-
-  const [newComment, setNewComment] = useState({ author: '', content: '' });
 
   if (loading) {
     return (
       <div className="min-h-screen bg-cinema-black flex items-center justify-center">
-        <div className="text-cinema-gold text-xl">加载中...</div>
+        <div className="text-cinema-gold text-2xl">加载中...</div>
       </div>
     );
   }
@@ -58,9 +69,10 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
   if (!article) {
     return (
       <div className="min-h-screen bg-cinema-black flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-2xl mx-auto px-4">
           <h1 className="cinema-title text-4xl text-white mb-4">文章未找到</h1>
-          <Link href="/articles" className="elegant-link text-cinema-gold">
+          <p className="text-cinema-silver mb-8">文章 ID: {articleId}</p>
+          <Link href="/articles" className="inline-block px-6 py-3 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors">
             返回文章列表
           </Link>
         </div>
@@ -68,28 +80,14 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
     );
   }
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newComment.author && newComment.content) {
-      setComments([
-        ...comments,
-        {
-          id: Date.now().toString(),
-          author: newComment.author,
-          content: newComment.content,
-          date: new Date().toISOString().split('T')[0],
-        },
-      ]);
-      setNewComment({ author: '', content: '' });
-    }
-  };
+  const currentIndex = allArticles.findIndex(a => a.id === article.id);
 
   return (
     <div className="min-h-screen bg-cinema-black flex flex-col">
       <Navigation />
 
-      {/* Article Header */}
       <article className="flex-1">
+        {/* Article Header */}
         <header className="relative h-[70vh] overflow-hidden flex-shrink-0">
           <div
             className="absolute inset-0 bg-cover bg-center cinema-image"
@@ -166,86 +164,7 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
                     <p className="text-cinema-gray text-sm">作者</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <button className="p-2 bg-cinema-gray hover:bg-cinema-gold hover:text-cinema-black rounded transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                  </button>
-                  <button className="p-2 bg-cinema-gray hover:bg-cinema-gold hover:text-cinema-black rounded transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </button>
-                </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Comments Section */}
-        <section className="py-16 bg-cinema-dark">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="cinema-title text-3xl text-white mb-8">评论 ({comments.length})</h2>
-
-            {/* Comment Form */}
-            <form onSubmit={handleCommentSubmit} className="mb-12">
-              <div className="bg-cinema-black p-6 rounded-lg border border-cinema-gray">
-                <div className="mb-4">
-                  <label htmlFor="author" className="block text-cinema-silver text-sm mb-2">
-                    名称
-                  </label>
-                  <input
-                    type="text"
-                    id="author"
-                    value={newComment.author}
-                    onChange={(e) => setNewComment({ ...newComment, author: e.target.value })}
-                    className="w-full bg-cinema-dark border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors"
-                    placeholder="请输入您的名称"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="content" className="block text-cinema-silver text-sm mb-2">
-                    评论内容
-                  </label>
-                  <textarea
-                    id="content"
-                    value={newComment.content}
-                    onChange={(e) => setNewComment({ ...newComment, content: e.target.value })}
-                    rows={4}
-                    className="w-full bg-cinema-dark border border-cinema-gray rounded px-4 py-2 text-white focus:outline-none focus:border-cinema-gold transition-colors resize-none"
-                    placeholder="分享您的想法..."
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors"
-                >
-                  发表评论
-                </button>
-              </div>
-            </form>
-
-            {/* Comments List */}
-            <div className="space-y-6">
-              {comments.map((comment) => (
-                <div key={comment.id} className="bg-cinema-black p-6 rounded-lg border border-cinema-gray">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-cinema-gray rounded-full flex items-center justify-center">
-                        <span className="text-cinema-gold font-semibold">{comment.author[0]}</span>
-                      </div>
-                      <div>
-                        <p className="text-white font-semibold">{comment.author}</p>
-                        <p className="text-cinema-gray text-xs">{comment.date}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-cinema-silver leading-relaxed">{comment.content}</p>
-                </div>
-              ))}
             </div>
           </div>
         </section>
@@ -256,12 +175,11 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
             <div className="flex justify-between">
               <button
                 onClick={() => {
-                  const currentIndex = allArticles.findIndex(a => a.id === article.id);
                   if (currentIndex > 0) {
                     router.push(`/articles/${allArticles[currentIndex - 1].id}`);
                   }
                 }}
-                disabled={allArticles.findIndex(a => a.id === article.id) === 0}
+                disabled={currentIndex === 0}
                 className="flex items-center gap-2 px-6 py-3 bg-cinema-dark hover:bg-cinema-gray rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,12 +189,11 @@ export default function ArticlePageClient({ articleId }: ArticlePageClientProps)
               </button>
               <button
                 onClick={() => {
-                  const currentIndex = allArticles.findIndex(a => a.id === article.id);
                   if (currentIndex < allArticles.length - 1) {
                     router.push(`/articles/${allArticles[currentIndex + 1].id}`);
                   }
                 }}
-                disabled={allArticles.findIndex(a => a.id === article.id) === allArticles.length - 1}
+                disabled={currentIndex === allArticles.length - 1}
                 className="flex items-center gap-2 px-6 py-3 bg-cinema-dark hover:bg-cinema-gray rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 下一篇
