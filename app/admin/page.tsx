@@ -5,12 +5,17 @@ import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { articles as sampleArticles } from '@/data/sampleData';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminPage() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('articles');
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // 从 localStorage 加载已发布的文章
   const [articles, setArticles] = useState<typeof sampleArticles>([]);
@@ -21,27 +26,60 @@ export default function AdminPage() {
     setArticles([...sampleArticles, ...published]);
 
     // 检查登录状态
-    const loggedIn = localStorage.getItem('adminLoggedIn');
-    if (loggedIn === 'true') {
-      setIsLoggedIn(true);
-    }
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsLoggedIn(true);
+      }
+    };
+    checkSession();
   }, []);
 
-  // 简单的密码验证
-  const handleLogin = (e: React.FormEvent) => {
+  // 使用 Supabase 进行登录或注册
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') {
-      setIsLoggedIn(true);
-      localStorage.setItem('adminLoggedIn', 'true'); // 保存登录状态
-    } else {
-      alert('密码错误，提示：admin123');
+    setError('');
+    setLoading(true);
+
+    try {
+      if (isLoginMode) {
+        // 登录
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          setIsLoggedIn(true);
+        }
+      } else {
+        // 注册
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          // 注册成功，自动登录
+          setIsLoggedIn(true);
+          alert('注册成功！欢迎加入！');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || '操作失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 
   // 退出登录
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
-    localStorage.removeItem('adminLoggedIn'); // 清除登录状态
   };
 
   if (!isLoggedIn) {
@@ -49,11 +87,34 @@ export default function AdminPage() {
       <div className="min-h-screen bg-cinema-black flex items-center justify-center">
         <div className="max-w-md w-full mx-4">
           <div className="bg-cinema-dark p-8 rounded-lg border border-cinema-gray">
-            <h1 className="cinema-title text-3xl text-cinema-gold mb-6 text-center">管理后台登录</h1>
-            <form onSubmit={handleLogin}>
+            <h1 className="cinema-title text-3xl text-cinema-gold mb-6 text-center">
+              {isLoginMode ? '管理后台登录' : '注册管理员账号'}
+            </h1>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500 rounded text-red-500 text-sm">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleAuth}>
+              <div className="mb-4">
+                <label htmlFor="email" className="block text-cinema-silver text-sm mb-2">
+                  邮箱地址
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-3 text-white focus:outline-none focus:border-cinema-gold transition-colors"
+                  placeholder="请输入邮箱"
+                  required
+                />
+              </div>
               <div className="mb-6">
                 <label htmlFor="password" className="block text-cinema-silver text-sm mb-2">
-                  管理员密码
+                  密码
                 </label>
                 <input
                   type="password"
@@ -61,17 +122,31 @@ export default function AdminPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-cinema-black border border-cinema-gray rounded px-4 py-3 text-white focus:outline-none focus:border-cinema-gold transition-colors"
-                  placeholder="请输入密码 (admin123)"
+                  placeholder="请输入密码（至少6位）"
                   required
+                  minLength={6}
                 />
               </div>
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors"
+                disabled={loading}
+                className="w-full px-6 py-3 bg-cinema-gold text-cinema-black font-semibold rounded hover:bg-cinema-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                登录
+                {loading ? '处理中...' : (isLoginMode ? '登录' : '注册')}
               </button>
             </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setIsLoginMode(!isLoginMode);
+                  setError('');
+                }}
+                className="text-cinema-silver hover:text-cinema-gold transition-colors text-sm"
+              >
+                {isLoginMode ? '还没有账号？立即注册' : '已有账号？返回登录'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
