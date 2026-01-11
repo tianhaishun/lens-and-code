@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 import { articles as sampleArticles } from '@/data/sampleData'
 
-export default async function sitemap(): MetadataRoute.Sitemap {
+export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://monumental-kulfi-d85db9.netlify.app'
 
   // 静态页面
